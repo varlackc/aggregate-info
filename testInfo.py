@@ -41,7 +41,6 @@ def aggregate_available(current_dir):
 
     return verify_aggregate
     
-    
 # get the current directory of the current location
 def current_directory():
     """
@@ -80,6 +79,8 @@ def display_recipes(dir_list):
          # display the meta.yaml
          find_meta_yaml(recipe_path)
          
+         # display the run_test
+         find_run_test(recipe_path)
 
 # find and open the meta.yaml
 def find_meta_yaml(recipe):
@@ -88,15 +89,40 @@ def find_meta_yaml(recipe):
     recipe_location = "{0}/recipe/meta.yaml".format(recipe)    
 
     # Print element 
-    print(recipe_location)
+    #print(recipe_location)
 
     # verify that the meta.yaml file is available
     verify_meta_exists = os.path.isfile(recipe_location)
 
     print("Does Meta.yaml Exists? : {0}".format(verify_meta_exists))
 
+    return verify_meta_exists
+
 # see if a test section is included in the meta.yaml
 
+# check to see if the run_test file is available
+def find_run_test(recipe):
+    """
+    This method verifies if the test_run files are included in the recipe
+    """
+
+    # declare variables
+    run_test_sh = "{0}/recipe/run_test.sh".format(recipe) 
+    run_test_py = "{0}/recipe/run_test.sh".format(recipe) 
+    run_test_bat = "{0}/recipe/run_test.sh".format(recipe)
+
+    # Print element
+    #print(recipe_location)
+
+    # verify that the runn_test file is available
+    sh_exists = os.path.isfile(run_test_sh)
+    py_exists = os.path.isfile(run_test_py)
+    bat_exists = os.path.isfile(run_test_bat)
+
+
+    print("Does run_test.sh Exists? : {0}".format(sh_exists))
+    print("Does run_test.py Exists? : {0}".format(py_exists))
+    print("Does run_test.bat Exists? : {0}".format(bat_exists))
 
 #def main(args=None, unknown=None):
 def main():
