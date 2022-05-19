@@ -12,6 +12,7 @@ import os
 from os import lseek, system, chdir
 import os.path
 import sys
+import datetime
 import pathlib
 from pathlib import Path
 
@@ -56,45 +57,71 @@ def current_directory():
     
 # get a list of the folders inside of aggregate
 def get_list_packages():
+    """
+    This method gets the list of packages in aggregate
+    """
       
-      # get the list of elements in aggregate
-      dir_list = os.listdir(path)
+    # get the list of elements in aggregate
+    dir_list = os.listdir(path)
   
-      return dir_list
+    return dir_list
+
+# get the path of a given recipe
+def get_recipe_path(recipe):
+    """
+    This method finds the path of a given recipe
+    """
+    
+    # get the current directory url
+    current_path = current_directory()
+
+    # get the recipe path
+    path_of_recipe = "{0}/aggregate/{1}".format(current_path,recipe)
+
+    return path_of_recipe
 
 # display the list of recipes
 def display_recipes(dir_list):
+    """
+    This method displays the list of recipes 
+    """
    
-     # get the current directory url
-     current_path = current_directory()
- 
-     # print elements in the aggregate folder
-     for recipe in dir_list:
+    # print elements in the aggregate folder
+    for recipe in dir_list:
          print(recipe)
 
-         # get the recipe url
-         recipe_path = "{0}/aggregate/{1}".format(current_path,recipe)
-         print(recipe_path)
+         # get the recipe path
+         #recipe_path = get_recipe_path(recipe)
 
          # display the meta.yaml
-         find_meta_yaml(recipe_path)
+         meta_result = find_meta_yaml(recipe)
          
          # display the run_test
-         find_run_test(recipe_path)
+         sh_result, py_result, bat_result = find_run_test(recipe)
+
+         #----
+         print("---")
+         print("Meta.yaml Exists? : {0}".format(meta_result))
+         print("run_tests.sh Exists? : {0}".format(sh_result))
+         print("run_tests.py Exists? : {0}".format(py_result))
+         print("run_tests.bat Exists? : {0}".format(bat_result))
+         print("------------------")
 
 # find and open the meta.yaml
 def find_meta_yaml(recipe):
+    """
+    This method verifies that the meta.yaml file is available in the recipe
+    The input is as follows: <recipe-name>
+    The output is as follows: <verify_meta_exists>
+    """
+
+    recipe_path = get_recipe_path(recipe)
     
     # declare variable
-    recipe_location = "{0}/recipe/meta.yaml".format(recipe)    
-
-    # Print element 
-    #print(recipe_location)
+    recipe_location = "{0}/recipe/meta.yaml".format(recipe_path)    
 
     # verify that the meta.yaml file is available
     verify_meta_exists = os.path.isfile(recipe_location)
-
-    print("Does Meta.yaml Exists? : {0}".format(verify_meta_exists))
 
     return verify_meta_exists
 
@@ -104,25 +131,160 @@ def find_meta_yaml(recipe):
 def find_run_test(recipe):
     """
     This method verifies if the test_run files are included in the recipe
+    The input is as follows: <recipe-name>
+    The output is as follows: <sh_exists> <py_exists> <bat_exists>
     """
 
-    # declare variables
-    run_test_sh = "{0}/recipe/run_test.sh".format(recipe) 
-    run_test_py = "{0}/recipe/run_test.sh".format(recipe) 
-    run_test_bat = "{0}/recipe/run_test.sh".format(recipe)
+    # get the path of the recipe
+    recipe_path = get_recipe_path(recipe)
 
-    # Print element
-    #print(recipe_location)
+    # declare variables
+    run_test_sh = "{0}/recipe/run_test.sh".format(recipe_path) 
+    run_test_py = "{0}/recipe/run_test.sh".format(recipe_path) 
+    run_test_bat = "{0}/recipe/run_test.sh".format(recipe_path)
 
     # verify that the runn_test file is available
     sh_exists = os.path.isfile(run_test_sh)
     py_exists = os.path.isfile(run_test_py)
     bat_exists = os.path.isfile(run_test_bat)
 
+    return sh_exists, py_exists, bat_exists
 
-    print("Does run_test.sh Exists? : {0}".format(sh_exists))
-    print("Does run_test.py Exists? : {0}".format(py_exists))
-    print("Does run_test.bat Exists? : {0}".format(bat_exists))
+# get packages with only one test_run file
+def have_one_file(dir_list):
+    
+    # declare variables
+    one_file_count = 0
+
+    # loop to find the files containing one file
+    for recipe in dir_list:
+        # gather the run_test results
+        sh_result, py_result, bat_result = find_run_test(recipe)
+        #print(recipe)
+        #print("sh: {0} | py: {1} | bat: {2}".format(sh_result, py_result, bat_result))
+        
+        if((sh_result is True and py_result is False and bat_result is False) or 
+        (sh_result is False and py_result is True and bat_result is False) or
+        (sh_result is False and py_result is False and bat_result is True)):   
+            print(recipe)
+            print("one file") 
+            one_file_count = one_file_count + 1
+
+    return one_file_count
+
+# get packages with two test_run files
+def have_two_files(dir_list):
+    
+    # declare variables
+    two_file_count = 0
+
+    # loop to find the files containing one file
+    for recipe in dir_list:
+        # gather the run_test results
+        sh_result, py_result, bat_result = find_run_test(recipe)
+        #print(recipe)
+        #print("sh: {0} | py: {1} | bat: {2}".format(sh_result, py_result, bat_result))
+        
+        if((sh_result is True and py_result is True and bat_result is False) or 
+        (sh_result is False and py_result is True and bat_result is True) or
+        (sh_result is True and py_result is False and bat_result is True)):   
+            print(recipe)
+            print("two file") 
+            two_file_count = two_file_count + 1
+            
+    return two_file_count
+
+# get packages with three test_run files
+def have_three_file(dir_list):
+    
+    # declare variables
+    three_file_count = 0
+
+    # loop to find the files containing one file
+    for recipe in dir_list:
+        # gather the run_test results
+        sh_result, py_result, bat_result = find_run_test(recipe)
+        #print(recipe)
+        #print("sh: {0} | py: {1} | bat: {2}".format(sh_result, py_result, bat_result))
+        
+        if(sh_result is True and py_result is True and bat_result is True):   
+            print(recipe)
+            print("three file") 
+            three_file_count = three_file_count + 1
+    
+    # display the total number of packages with 3 files
+    print("Number of packages with three files: {0}".format(three_file_count))
+            
+    return three_file_count
+
+# generate report results
+def generate_reports(dir_list):
+    """
+    This method generates the reports
+    """
+
+    # declare variables
+    aggregate_size = len(dir_list)
+
+    print("-- Generate Reports --")
+
+    top_location = current_directory()
+        
+    # get the date parameters
+    date = datetime.date.today()
+
+    day_number = date.day
+    month_name = date.strftime("%B")
+    year_number = date.year
+
+    # set the directories
+    file_name = "Report_{0}_{1}_{2}.md".format(month_name, day_number, year_number)
+    child_dir = "Report"
+
+    # print the folder directories
+    print("--- Folder Directories ---")
+
+    file_location = "{0}/{1}/".format(top_location,child_dir)
+    #print(file_location)
+
+    # verify that the path directory exists
+    locationStatus = Path(file_location).exists()
+
+    # Gather sumarry information
+    one_file_result = have_one_file(dir_list)
+    two_file_result = have_two_files(dir_list)
+    three_file_result = have_three_file(dir_list)
+
+    # calculate persentages
+    three_file_persentage = (float(three_file_result) / float(aggregate_size)) * 100
+
+    # if the folder structure is missing then it is created
+    if(locationStatus is False):
+        #os.mkdirs(file_location)
+        # makedirs allow to create nested directories
+        # https://stackoverflow.com/questions/273192/how-can-i-safely-create-a-nested-directory
+        os.makedirs(file_location) 
+
+    # set the report information
+    space = "\n---\n\n"
+    header = "# {0} {1} {2} {3}".format( month_name, day_number, year_number,space)
+
+    body = "## Report"+space
+    body = body + "## Packages With One Test"+space
+    body = body + "{0} {1}".format(one_file_result, space)
+    body = body + "## Package With Two Test"+space
+    body = body + "{0} {1}".format(two_file_result, space)
+    body = body + "## Package With Three Test"+space
+    body = body + "Number of packages with three files: {0} {1}".format(three_file_result, space)
+    body = body + "Percentage of packages with three files: {0:8.2f}% {1}".format(three_file_persentage, space)
+
+    reportTotal = header+body
+
+    # write the file to the hardware
+    with open(file_location + file_name,'w') as f:
+        f.write(reportTotal)
+
+    return False
 
 #def main(args=None, unknown=None):
 def main():
@@ -148,7 +310,10 @@ def main():
         recipes = get_list_packages()
     
         # display the list of existing recipes
-        display_recipes(recipes)
+        #display_recipes(recipes)
+
+        # generate reports
+        generate_reports(recipes)
 
 
 if __name__ == '__main__':
