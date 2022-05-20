@@ -140,8 +140,8 @@ def find_run_test(recipe):
 
     # declare variables
     run_test_sh = "{0}/recipe/run_test.sh".format(recipe_path) 
-    run_test_py = "{0}/recipe/run_test.sh".format(recipe_path) 
-    run_test_bat = "{0}/recipe/run_test.sh".format(recipe_path)
+    run_test_py = "{0}/recipe/run_test.py".format(recipe_path) 
+    run_test_bat = "{0}/recipe/run_test.bat".format(recipe_path)
 
     # verify that the runn_test file is available
     sh_exists = os.path.isfile(run_test_sh)
@@ -155,6 +155,8 @@ def have_one_file(dir_list):
     
     # declare variables
     one_file_count = 0
+    recipe_result = []
+    index = 0
 
     # loop to find the files containing one file
     for recipe in dir_list:
@@ -162,21 +164,29 @@ def have_one_file(dir_list):
         sh_result, py_result, bat_result = find_run_test(recipe)
         #print(recipe)
         #print("sh: {0} | py: {1} | bat: {2}".format(sh_result, py_result, bat_result))
-        
+
         if((sh_result is True and py_result is False and bat_result is False) or 
         (sh_result is False and py_result is True and bat_result is False) or
-        (sh_result is False and py_result is False and bat_result is True)):   
+        (sh_result is False and py_result is False and bat_result is True)): 
             print(recipe)
+            print("sh: {0} | py: {1} | bat: {2}".format(sh_result, py_result, bat_result))
             print("one file") 
             one_file_count = one_file_count + 1
 
-    return one_file_count
+            # Update the recipe result
+            #recipe_result.insert[index,[recipe,sh_result,py_result,bat_result]]
+            recipe_result.append([recipe,sh_result,py_result,bat_result])
+            index = index + 1
+
+    return one_file_count, recipe_result
 
 # get packages with two test_run files
 def have_two_files(dir_list):
     
     # declare variables
     two_file_count = 0
+    recipe_result = []
+    index = 0
 
     # loop to find the files containing one file
     for recipe in dir_list:
@@ -189,16 +199,23 @@ def have_two_files(dir_list):
         (sh_result is False and py_result is True and bat_result is True) or
         (sh_result is True and py_result is False and bat_result is True)):   
             print(recipe)
+            print("sh: {0} | py: {1} | bat: {2}".format(sh_result, py_result, bat_result))
             print("two file") 
             two_file_count = two_file_count + 1
+
+            # Update the recipe result
+            recipe_result.append([recipe,sh_result,py_result,bat_result])
+            index = index + 1
             
-    return two_file_count
+    return two_file_count, recipe_result
 
 # get packages with three test_run files
 def have_three_file(dir_list):
     
     # declare variables
     three_file_count = 0
+    recipe_result = []
+    index = 0
 
     # loop to find the files containing one file
     for recipe in dir_list:
@@ -209,13 +226,25 @@ def have_three_file(dir_list):
         
         if(sh_result is True and py_result is True and bat_result is True):   
             print(recipe)
+            print("sh: {0} | py: {1} | bat: {2}".format(sh_result, py_result, bat_result))
             print("three file") 
             three_file_count = three_file_count + 1
+
+            # Update the recipe result
+            recipe_result.append([recipe,sh_result,py_result,bat_result])
+            index = index + 1
     
     # display the total number of packages with 3 files
-    print("Number of packages with three files: {0}".format(three_file_count))
+    #print("Number of packages with three files: {0}".format(three_file_count))
             
-    return three_file_count
+    return three_file_count, recipe_result
+
+def find_percentage(file_result, aggregate_size):
+    
+    # calculate persentages
+    file_persentage = (float(file_result) / float(aggregate_size)) * 100
+
+    return file_persentage
 
 # generate report results
 def generate_reports(dir_list):
@@ -251,12 +280,15 @@ def generate_reports(dir_list):
     locationStatus = Path(file_location).exists()
 
     # Gather sumarry information
-    one_file_result = have_one_file(dir_list)
-    two_file_result = have_two_files(dir_list)
-    three_file_result = have_three_file(dir_list)
+    one_file_result, one_file_list = have_one_file(dir_list)
+    two_file_result, two_file_list = have_two_files(dir_list)
+    three_file_result, three_file_list = have_three_file(dir_list)
 
     # calculate persentages
-    three_file_persentage = (float(three_file_result) / float(aggregate_size)) * 100
+
+    one_file_persentage = find_percentage(one_file_result, aggregate_size)
+    two_file_persentage = find_percentage(two_file_result, aggregate_size)
+    three_file_persentage = find_percentage(three_file_result, aggregate_size)
 
     # if the folder structure is missing then it is created
     if(locationStatus is False):
@@ -271,11 +303,13 @@ def generate_reports(dir_list):
 
     body = "## Report"+space
     body = body + "## Packages With One Test"+space
-    body = body + "{0} {1}".format(one_file_result, space)
+    body = body + "Number of packages with one file: {0} \n".format(one_file_result)
+    body = body + "Percentage of packages with one file: {0:8.2f}% {1}".format(one_file_persentage, space)
     body = body + "## Package With Two Test"+space
-    body = body + "{0} {1}".format(two_file_result, space)
+    body = body + "Number of packages with two files: {0} \n".format(two_file_result)
+    body = body + "Percentage of packages with two files: {0:8.2f}% {1}".format(two_file_persentage, space)
     body = body + "## Package With Three Test"+space
-    body = body + "Number of packages with three files: {0} {1}".format(three_file_result, space)
+    body = body + "Number of packages with three files: {0} \n".format(three_file_result, space)
     body = body + "Percentage of packages with three files: {0:8.2f}% {1}".format(three_file_persentage, space)
 
     reportTotal = header+body
@@ -315,6 +349,13 @@ def main():
         # generate reports
         generate_reports(recipes)
 
+        # -----------------------------------
+
+        # debug the function for only one recipe
+        #one_file_result = have_one_file(recipes)
+        
+        # print the result
+        #print("Results for certifi-feedstock : {0}".format(one_file_result))
 
 if __name__ == '__main__':
     sys.exit(main())
