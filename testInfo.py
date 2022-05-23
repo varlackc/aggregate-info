@@ -367,7 +367,7 @@ def generate_reports(dir_list):
     with open(file_location + file_name_one,'w') as f:
         f.write(reportTotal)
 
-    # report file with two test files
+    # report package with two test files
 
     # set the report information
     body = "## Report"+space
@@ -392,6 +392,22 @@ def generate_reports(dir_list):
     reportTotal = header+body
 
     with open(file_location + file_name_two,'w') as f:
+        f.write(reportTotal)
+
+    # report package with three test files
+
+    # set the  report information
+    body = "## Report"+space
+
+    # loop to add elements to file
+    for three_file_package in three_file_list:
+    
+        body = body + "-`{0}` \n".format(three_file_package[0])
+        body = body + "\t (test_run.sh, test_run.py, test_run.bat) \n"
+
+    reportTotal = header + body
+
+    with open(file_location + file_name_three,'w') as f:
         f.write(reportTotal)
 
     return False
@@ -435,3 +451,4 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
+
