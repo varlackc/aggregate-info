@@ -150,15 +150,39 @@ def find_run_test(recipe):
 
     return sh_exists, py_exists, bat_exists
 
+# get packages with no test_run files
+def missing_file(dir_list):
+
+    # declare variables
+    missing_file_count = 0
+    recipe_result = []
+
+    # loop to find the find the packages without test files
+    for recipe in dir_list:
+        # gather the run_test results
+        sh_result, py_result, bat_result = find_run_test(recipe)
+
+        # evaluate the test results
+        if(sh_result is False and py_result is False and bat_result is False):
+            print(recipe)
+            print("sh: {0} | py: {1} | bat: {2}".format(sh_result, py_result, bat_result))
+            print("No test files") 
+            missing_file_count = missing_file_count + 1
+
+        # update the recipe results
+        recipe_result.append([recipe, sh_result, py_result, bat_result])
+    
+    # return the results
+    return missing_file_count, recipe_result
+
 # get packages with only one test_run file
 def have_one_file(dir_list):
     
     # declare variables
     one_file_count = 0
     recipe_result = []
-    index = 0
 
-    # loop to find the files containing one file
+    # loop to find the packages containing one test file
     for recipe in dir_list:
         # gather the run_test results
         sh_result, py_result, bat_result = find_run_test(recipe)
@@ -174,9 +198,7 @@ def have_one_file(dir_list):
             one_file_count = one_file_count + 1
 
             # Update the recipe result
-            #recipe_result.insert[index,[recipe,sh_result,py_result,bat_result]]
             recipe_result.append([recipe,sh_result,py_result,bat_result])
-            index = index + 1
 
     return one_file_count, recipe_result
 
@@ -186,7 +208,6 @@ def have_two_files(dir_list):
     # declare variables
     two_file_count = 0
     recipe_result = []
-    index = 0
 
     # loop to find the files containing one file
     for recipe in dir_list:
@@ -205,7 +226,6 @@ def have_two_files(dir_list):
 
             # Update the recipe result
             recipe_result.append([recipe,sh_result,py_result,bat_result])
-            index = index + 1
             
     return two_file_count, recipe_result
 
@@ -215,7 +235,6 @@ def have_three_file(dir_list):
     # declare variables
     three_file_count = 0
     recipe_result = []
-    index = 0
 
     # loop to find the files containing one file
     for recipe in dir_list:
@@ -232,7 +251,6 @@ def have_three_file(dir_list):
 
             # Update the recipe result
             recipe_result.append([recipe,sh_result,py_result,bat_result])
-            index = index + 1
     
     # display the total number of packages with 3 files
     #print("Number of packages with three files: {0}".format(three_file_count))
@@ -268,6 +286,9 @@ def generate_reports(dir_list):
 
     # set the directories
     file_name = "Report_{0}_{1}_{2}.md".format(month_name, day_number, year_number)
+    file_name_one = "One_file_{0}_{1}_{2}.md".format(month_name, day_number, year_number)
+    file_name_two = "Two_file_{0}_{1}_{2}.md".format(month_name, day_number, year_number)
+    file_name_three = "Three_file_{0}_{1}_{2}.md".format(month_name, day_number, year_number)
     child_dir = "Report"
 
     # print the folder directories
@@ -280,12 +301,13 @@ def generate_reports(dir_list):
     locationStatus = Path(file_location).exists()
 
     # Gather sumarry information
+    missing_file_result, missinng_file_list = missing_file(dir_list)
     one_file_result, one_file_list = have_one_file(dir_list)
     two_file_result, two_file_list = have_two_files(dir_list)
     three_file_result, three_file_list = have_three_file(dir_list)
 
     # calculate persentages
-
+    missing_file_persentage = find_percentage(missing_file_result, aggregate_size)
     one_file_persentage = find_percentage(one_file_result, aggregate_size)
     two_file_persentage = find_percentage(two_file_result, aggregate_size)
     three_file_persentage = find_percentage(three_file_result, aggregate_size)
@@ -302,6 +324,9 @@ def generate_reports(dir_list):
     header = "# {0} {1} {2} {3}".format( month_name, day_number, year_number,space)
 
     body = "## Report"+space
+    body = body + "## Packages With No Test Files"+space
+    body = body + "Number of packages with no test files: {0} \n".format(missing_file_result) 
+    body = body + "Percentage of packages with no test files: {0:8.2f}% {1}".format(missing_file_persentage, space)
     body = body + "## Packages With One Test"+space
     body = body + "Number of packages with one file: {0} \n".format(one_file_result)
     body = body + "Percentage of packages with one file: {0:8.2f}% {1}".format(one_file_persentage, space)
@@ -316,6 +341,57 @@ def generate_reports(dir_list):
 
     # write the file to the hardware
     with open(file_location + file_name,'w') as f:
+        f.write(reportTotal)
+
+    # report file with only one test file 
+    
+    # set the report information
+    body = "## Report"+space
+    
+    # loop to add elements to file
+    for one_file_package in one_file_list:
+
+        # find the document existing
+        if(one_file_package[1] is True):
+            test_file_name = "test_run.sh"
+        if(one_file_package[2] is True):
+            test_file_name = "test_run.py"
+        if(one_file_package[3] is True):
+            test_file_name = "test_run.bat"
+
+        body = body + "- `{0}` \n".format(one_file_package[0])
+        body = body + "\t ({0}) \n".format(test_file_name)
+
+    reportTotal = header+body
+
+    with open(file_location + file_name_one,'w') as f:
+        f.write(reportTotal)
+
+    # report file with two test files
+
+    # set the report information
+    body = "## Report"+space
+
+    # loop to add elements to file
+    for two_file_package in two_file_list:
+
+        # find the document existing
+        if(two_file_package[1] is True and two_file_package[2] is True and two_file_package[3] is False):
+            file_one_name = "test_run.sh"
+            file_two_name = "test_run.py"
+        if(two_file_package[1] is False and two_file_package[2] is True and two_file_package[3] is True):
+            file_one_name = "test_run.py"
+            file_two_name = "test_run.bat"
+        if(two_file_package[1] is True and two_file_package[2] is False and two_file_package[3] is True):
+            file_one_name = "test_run.sh"
+            file_two_name = "test_run.bat"
+    
+        body = body + "- `{0}` \n".format(two_file_package[0])
+        body = body + "\t ({0} {1}) \n".format(file_one_name, file_two_name)
+    
+    reportTotal = header+body
+
+    with open(file_location + file_name_two,'w') as f:
         f.write(reportTotal)
 
     return False
