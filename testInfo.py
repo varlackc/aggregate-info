@@ -286,6 +286,7 @@ def generate_reports(dir_list):
 
     # set the directories
     file_name = "Report_{0}_{1}_{2}.md".format(month_name, day_number, year_number)
+    file_name_none = "No_file_{0}_{1}_{2}.md".format(month_name, day_number, year_number) 
     file_name_one = "One_file_{0}_{1}_{2}.md".format(month_name, day_number, year_number)
     file_name_two = "Two_file_{0}_{1}_{2}.md".format(month_name, day_number, year_number)
     file_name_three = "Three_file_{0}_{1}_{2}.md".format(month_name, day_number, year_number)
@@ -301,7 +302,7 @@ def generate_reports(dir_list):
     locationStatus = Path(file_location).exists()
 
     # Gather sumarry information
-    missing_file_result, missinng_file_list = missing_file(dir_list)
+    missing_file_result, missing_file_list = missing_file(dir_list)
     one_file_result, one_file_list = have_one_file(dir_list)
     two_file_result, two_file_list = have_two_files(dir_list)
     three_file_result, three_file_list = have_three_file(dir_list)
@@ -342,6 +343,23 @@ def generate_reports(dir_list):
     # write the file to the hardware
     with open(file_location + file_name,'w') as f:
         f.write(reportTotal)
+
+    # report file with no test files
+    
+    # set the report information
+    body = "## Report"+space
+    # loop to add elements to file
+    for missing_file_package in missing_file_list:
+
+        # find the document existing
+        body = body + "- `{0}` \n".format(missing_file_package[0])
+
+    reportTotal = header+body
+
+    with open(file_location + file_name_none, 'w') as f:
+        f.write(reportTotal)
+
+    # --
 
     # report file with only one test file 
     
@@ -451,4 +469,3 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
-
