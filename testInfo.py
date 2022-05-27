@@ -5,6 +5,9 @@
 # Outputs relevant information regarding the package  #
 # tests                                               #
 #                                                     #
+# The package makes use of pyyaml to gather meta.yaml #
+# data from the recipes in aggregate.                 #
+#                                                     #
 #######################################################
 
 import argparse
@@ -15,6 +18,8 @@ import sys
 import datetime
 import pathlib
 from pathlib import Path
+# need to install pyyaml before using the pyyaml package
+import yaml
 
 __path__ = '.'
 __author__ = 'Maxwell Varlack'
@@ -257,12 +262,80 @@ def have_three_file(dir_list):
             
     return three_file_count, recipe_result
 
+# calculate percentages
 def find_percentage(file_result, aggregate_size):
     
     # calculate persentages
     file_persentage = (float(file_result) / float(aggregate_size)) * 100
 
     return file_persentage
+
+# create temporary files
+def generate_temporary_file(temp_file, data):
+
+    # declare variables
+    child_dir = "Temp"
+    top_location = current_directory()
+    file_location = "{0}/{1}".format(top_location,child_dir)
+
+    # verify that the location exists
+    locationStatus = Path(file_location).exists()    
+
+    # if the folder structure is missing then it is created
+    if(locationStatus is False):
+        #os.mkdirs(file_location)
+        # makedirs allow to create nested directories
+        # https://stackoverflow.com/questions/273192/how-can-i-safely-create-a-nested-directory
+        os.makedirs(file_location) 
+
+    # write the file 
+    with open(file_location + temp_file, 'w') as f:
+        f.write(data)
+
+    pass
+
+# modify the temporary file to make the meta file compatible with pyyaml
+def modify_temporary_file():
+    pass
+
+# delete temporary file
+def delete_temporary_file():
+    pass
+
+# Gathere the test information from the meta.yaml file
+def find_meta_info(dir_list):
+
+    # Declare variables
+
+    # set the path of the recipe
+
+    # ---------------------------
+    recipe = "pooch-feedstock"
+    current_path = current_directory()
+    meta_file_path = "{0}/aggregate/{1}/recipe/meta.yaml".format(current_path,recipe)
+
+    print("Open the {0} meta.yaml file".format(recipe))
+    print("{0} \n".format(meta_file_path))
+
+    with open(meta_file_path, "r") as stream:
+        try:
+            print(yaml.safe_load(stream))
+        except yaml.YAMLError as exc:
+            print(exc)
+
+    # ---------------------------
+
+    # loop to find the recipes in aggregate
+#    for recipe in dir_list:
+
+        # set the path of the yaml file
+#        current_path = current_directory()
+#        meta_file_path = "{0}/aggregate/{1}/recipe/meta.yaml".format(current_path,recipe)
+
+        # open the meta.yaml file
+#        print("Open the {0} meta.yaml file".format(recipe))
+#        print("{0} \n".format(meta_file_path))
+    pass
 
 # generate report results
 def generate_reports(dir_list):
@@ -427,6 +500,9 @@ def generate_reports(dir_list):
 
     with open(file_location + file_name_three,'w') as f:
         f.write(reportTotal)
+    
+    # gather meta.yaml file data
+    find_meta_info(dir_list)
 
     return False
 
