@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#! /usr/bin/env python3
 
 #######################################################
 # This script looks for the packages in aggregate     #
@@ -20,6 +20,9 @@ import pathlib
 from pathlib import Path
 # need to install pyyaml before using the pyyaml package
 import yaml
+# standard python library used for file operations such as copying files
+# https://docs.python.org/3/library/shutil.html
+import shutil
 
 __path__ = '.'
 __author__ = 'Maxwell Varlack'
@@ -271,12 +274,15 @@ def find_percentage(file_result, aggregate_size):
     return file_persentage
 
 # create temporary files
-def generate_temporary_file(temp_file, data):
+def generate_temporary_file(recipe_name):
+    
+    print("Generate Temporary File")
+    #print("----------------------------")
 
     # declare variables
     child_dir = "Temp"
     top_location = current_directory()
-    file_location = "{0}/{1}".format(top_location,child_dir)
+    file_location = "{0}/{1}/".format(top_location,child_dir)
 
     # verify that the location exists
     locationStatus = Path(file_location).exists()    
@@ -288,14 +294,60 @@ def generate_temporary_file(temp_file, data):
         # https://stackoverflow.com/questions/273192/how-can-i-safely-create-a-nested-directory
         os.makedirs(file_location) 
 
+    #print("child_dir: {0}".format(child_dir))
+    #print("top_location: {0}".format(top_location))
+    #print("file_location: {0}".format(file_location))
+    #print("locationStatus: {0}".format(locationStatus))
+    #print("----------------------------")
+
+    # declare the location of the recipe
+    recipe_location = "{0}/aggregate/{1}".format(top_location,recipe_name)
+
+    # verify that the location exists
+    recipeLocationStatus = Path(recipe_location).exists()
+    #recipeLocationStatus = Path.exists(recipe_location)
+    print(recipeLocationStatus)
+
+    # if the folder location exists then copy the files
+    if(recipeLocationStatus is True):
+        
+        # set meta.yaml location
+        file_to_copy = "{0}/recipe/meta.yaml".format(recipe_location)
+
+        #print("----------------------------")
+        #print("recipe_location: {0}".format(recipe_location))
+        #print("file_to_copy: {0}".format(file_to_copy))
+        #print("destination: {0}".format(file_location))
+        #print("recipeLocationStatus: {0}".format(recipeLocationStatus))
+        #print("----------------------------")
+
+        # copy the meta.yaml file to the temporary folder 
+        # https://docs.python.org/3/library/shutil.html
+        shutil.copy2(file_to_copy,file_location)
+
+    else:
+        print("Could Not Locate The Recipe")
+        print("recipeLocationStatus: {0}".format(recipeLocationStatus))
+
     # write the file 
-    with open(file_location + temp_file, 'w') as f:
-        f.write(data)
+#    with open(file_location + temp_file_name, 'w') as f:
+#        f.write(data)
+
+
+    # copy the file to the new location
+    #shutil.copy2(source_file,file_location)
 
     pass
 
 # modify the temporary file to make the meta file compatible with pyyaml
 def modify_temporary_file():
+    """
+    This file modifies the temporary file to make it easier to parse
+    """
+    
+    # declare variables
+    
+
     pass
 
 # delete temporary file
@@ -502,7 +554,7 @@ def generate_reports(dir_list):
         f.write(reportTotal)
     
     # gather meta.yaml file data
-    find_meta_info(dir_list)
+    #find_meta_info(dir_list)
 
     return False
 
@@ -542,6 +594,11 @@ def main():
         
         # print the result
         #print("Results for certifi-feedstock : {0}".format(one_file_result))
+
+        # ------------------------------------
+
+        # generate temporary files that will be used to gather meta.yaml info
+        generate_temporary_file("certipy-feedstock") 
 
 if __name__ == '__main__':
     sys.exit(main())
