@@ -23,6 +23,10 @@ import yaml
 # standard python library used for file operations such as copying files
 # https://docs.python.org/3/library/shutil.html
 import shutil
+# the fileinput standard library module
+# will be used to replace content in file
+# https://docs.python.org/3/library/fileinput.html
+import fileinput
 
 __path__ = '.'
 __author__ = 'Maxwell Varlack'
@@ -276,7 +280,7 @@ def find_percentage(file_result, aggregate_size):
 # create temporary files
 def generate_temporary_file(recipe_name):
     
-    print("Generate Temporary File")
+    #print("Generate Temporary File")
     #print("----------------------------")
 
     # declare variables
@@ -306,7 +310,7 @@ def generate_temporary_file(recipe_name):
     # verify that the location exists
     recipeLocationStatus = Path(recipe_location).exists()
     #recipeLocationStatus = Path.exists(recipe_location)
-    print(recipeLocationStatus)
+    #print(recipeLocationStatus)
 
     # if the folder location exists then copy the files
     if(recipeLocationStatus is True):
@@ -340,13 +344,63 @@ def generate_temporary_file(recipe_name):
     pass
 
 # modify the temporary file to make the meta file compatible with pyyaml
-def modify_temporary_file():
+def modify_temporary_file(recipe_name):
     """
     This file modifies the temporary file to make it easier to parse
     """
     
     # declare variables
+    line_to_modify = "{%"
+    line_to_replace = "#{%"
+    modify_script = "script:"
+    replace_script = "#script:"
+    modify_name = "name: {{"
+    replace_name = "#name: {{"
+    modify_version = "version: {{"
+    replace_version = "#version: {{"
     
+
+    # set the location of the temporary files
+    child_dir = "Temp"
+    top_location = current_directory()
+    file_location = "{0}/{1}/".format(top_location,child_dir)
+    temp_file = "{0}meta.yaml".format(file_location)
+    new_file = "{0}{1}-meta.yaml".format(file_location,recipe_name)
+
+    # 
+
+    # display information
+    #print("---------------------")
+    #print("Modify Temporary File")
+    #print("File_location: {0}".format(file_location))
+    #print("Temp_file: {0}".format(temp_file))
+    #print("New_file: {0}".format(new_file))
+    #print("---------------------")
+
+    # replace the lines in the meta.yaml that are used for the jinja2 template
+    for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
+        # replace the jinja2 template sections
+        sys.stdout.write(line.replace(line_to_modify,line_to_replace))
+
+    # replace the script section
+    for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
+        # replace the jinja2 template sections
+        sys.stdout.write(line.replace(modify_script,replace_script))
+
+    # replace the name section
+    for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
+        # replace the jinja2 template sections
+        sys.stdout.write(line.replace(modify_name,replace_name))
+
+    # replace the name section
+    for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
+        # replace the jinja2 template sections
+        sys.stdout.write(line.replace(modify_version,replace_version))
+
+
+    # change the name of the temporary file
+    # https://docs.python.org/3/library/os.html#os.rename
+    os.rename(temp_file, new_file)
 
     pass
 
@@ -355,24 +409,34 @@ def delete_temporary_file():
     pass
 
 # Gathere the test information from the meta.yaml file
-def find_meta_info(dir_list):
+def find_meta_info(recipe):
 
     # Declare variables
-
+    current_path = current_directory()
+   
     # set the path of the recipe
 
     # ---------------------------
     recipe = "pooch-feedstock"
-    current_path = current_directory()
-    meta_file_path = "{0}/aggregate/{1}/recipe/meta.yaml".format(current_path,recipe)
+    #meta_file_path = "{0}/aggregate/{1}/recipe/meta.yaml".format(current_path,recipe)
+    meta_file_path = "{0}/Temp/{1}-meta.yaml".format(current_path,recipe)
 
     print("Open the {0} meta.yaml file".format(recipe))
     print("{0} \n".format(meta_file_path))
 
+    # generate the temporary file
+    generate_temporary_file(recipe)
+    modify_temporary_file(recipe)
+
+    # 
+
+    # try to open the file
     with open(meta_file_path, "r") as stream:
         try:
-            print(yaml.safe_load(stream))
+            result = yaml.safe_load(stream)
+            #print(result)
         except yaml.YAMLError as exc:
+            result = exc
             print(exc)
 
     # ---------------------------
@@ -387,7 +451,20 @@ def find_meta_info(dir_list):
         # open the meta.yaml file
 #        print("Open the {0} meta.yaml file".format(recipe))
 #        print("{0} \n".format(meta_file_path))
-    pass
+    return result
+
+def find_test_data(meta_info):
+    
+        print(meta_info)
+        print(meta_info.keys())
+        test_data = meta_info.get('test')
+        print(test_data)
+        test_commands = test_data.get('commands')
+        test_commands_size = len(test_commands)
+        print(test_commands)
+        print(test_commands_size)
+    
+        return test_commands, test_commands_size
 
 # generate report results
 def generate_reports(dir_list):
@@ -598,7 +675,23 @@ def main():
         # ------------------------------------
 
         # generate temporary files that will be used to gather meta.yaml info
-        generate_temporary_file("certipy-feedstock") 
+        #generate_temporary_file("certipy-feedstock") 
+
+        # modify the temporary files
+        #modify_temporary_file("certipy-feedstock")
+
+        # get the list of meta.yaml information from aggregate
+        recipe_result = find_meta_info(recipes)
+        #print(recipe_result.keys())
+        #test_data = recipe_result.get('test')
+        #print(test_data)
+        #test_commands = test_data.get('commands')
+        #test_commands_size = len(test_commands)
+        #print(test_commands)
+        #print(test_commands_size)
+        test_data, test_data_size = find_test_data(recipe_result)
+
 
 if __name__ == '__main__':
     sys.exit(main())
+
