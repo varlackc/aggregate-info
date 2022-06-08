@@ -31,6 +31,7 @@ import fileinput
 # https://jinja2docs.readthedocs.io/_/downloads/en/stable/pdf/
 import jinja2
 from jinja2 import Environment, FileSystemLoader
+import re
 
 __path__ = '.'
 __author__ = 'Maxwell Varlack'
@@ -368,7 +369,7 @@ def render_meta_file(recipe):
     file_to_render = "Temp/meta.yaml"
     configurations = {"compiler":"compiler","compiler('c')":"c_compiler", "cdt":"cdt",
     "pin_subpackage":"pin", "os":"os", "environ":"environment","libgomp_ver":"libgomp_ver",
-    "pin_compatible":"pin_compatible"}
+    "pin_compatible":"pin_compatible", "environ":"environment", "python":"python"}
 
     loader = FileSystemLoader(template_folder)
     env = Environment(loader = loader)
@@ -392,339 +393,38 @@ def modify_temporary_file(recipe_name):
     """
     print("Recipe_Name: {0}".format(recipe_name))
     # declare variables
-    line_to_modify = "{%"
-    line_to_replace = "#{%"
-    modify_script = "script:"
-    replace_script = "#script:"
-    modify_script2 = "script:\n"
-    replace_script2 = "#script:\n#"
-    modify_name = "name: {{"
-    replace_name = "#name: {{"
-    modify_version = "version: {{"
-    replace_version = "#version: {{"
-    modify_template = "- {{ "
-    replace_template = "#- {{ "
-    modify_url = "https://www.googleapis.com/"
-    replace_url = "# https://www.googleapis.com/"
-    modify_fn = "fn: {{ "
-    replace_fn = "#fn: {{ "
-    modify_sha256 = "sha256: {{ "
-    replace_sha256 = "#sha256: {{ "
-    modify_template2 = "  {{ "
-    replace_template2 = "  #{{ "
-    modify_number = "number: {{ "
-    replace_number = "#number: {{"
-#    modify_number2 = "number: "
-#    replace_number2 = "#number: "
-    modify_compiler = "- {{ compiler('c')"
-    replace_compiler = "- {{ c_compiler"
-    modify_compiler2 = '- {{ compiler("c")'
-    replace_compiler2 = "- {{ c_compiler"
-    modify_compiler3 = "- {{ compiler('cxx')"
-    replace_compiler3 = "- {{ cxx_compiler"
-    modify_compiler4 = '- {{ compiler("cxx")'
-    replace_compiler4 = "- {{ cxx_compiler"
-    modify_compiler5 = "- {{ compiler('fortran')"
-    replace_compiler5 = "- {{ fortran_compiler"
-    modify_compiler6 = '- {{ compiler("cuda")'
-    replace_compiler6 = "- {{ cuda_compiler"
 
-    modify_runtime = " ~ '_runtime'"
-    replace_runtime = ""
-    modify_runtime2 = " ~ runtime_year"
-    replace_runtime2 = ""
-
-
-    modify_cdt = "- {{ cdt('xorg-x11-proto-devel')"
-    replace_cdt = "- {{ cdt"
-    modify_cdt2 = "- {{ cdt('libx11-devel')"
-    replace_cdt2 = "- {{ cdt"
-    modify_cdt3 = "- {{ cdt('libxext-devel')"
-    replace_cdt3 = "- {{ cdt"
-    modify_cdt4 = "- {{ cdt('libxrender-devel')"
-    replace_cdt4 = "- {{ cdt"
-    modify_cdt5 = "- {{ cdt('mesa-libgl-devel')"
-    replace_cdt5 = "- {{ cdt"
-    modify_cdt6 = "- {{ cdt('mesa-libegl-devel')"
-    replace_cdt6 = "- {{ cdt"
-    modify_cdt7 = "- {{ cdt('mesa-dri-drivers')"
-    replace_cdt7 = "- {{ cdt" 
-    modify_cdt8 = "- {{ cdt('libxau-devel')"
-    replace_cdt8 = "- {{ cdt" 
-    modify_cdt9 = "- {{ cdt('alsa-lib-devel')"
-    replace_cdt9 = "- {{ cdt" 
-    modify_cdt10 = "- {{ cdt('gtk2-devel')"
-    replace_cdt10 = "- {{ cdt" 
-    modify_cdt11 = "- {{ cdt('gtkmm24-devel')"
-    replace_cdt11 = "- {{ cdt" 
-    modify_cdt12 = "- {{ cdt('libdrm-devel')"
-    replace_cdt12 = "- {{ cdt" 
-    modify_cdt13 = "- {{ cdt('libxcomposite-devel')"
-    replace_cdt13 = "- {{ cdt" 
-    modify_cdt14 = "- {{ cdt('libxcursor-devel')" 
-    replace_cdt14 = "- {{ cdt"
-    modify_cdt15 = "- {{ cdt('libxi-devel')" 
-    replace_cdt15 = "- {{ cdt"
-    modify_cdt16 = "- {{ cdt('libxrandr-devel')"
-    replace_cdt16 = "- {{ cdt" 
-    modify_cdt17 = "- {{ cdt('pciutils-devel')"
-    replace_cdt17 = "- {{ cdt" 
-    modify_cdt18 = "- {{ cdt('libxscrnsaver-devel')"
-    replace_cdt18 = "- {{ cdt" 
-    modify_cdt19 = "- {{ cdt('libxtst-devel')"
-    replace_cdt19 = "- {{ cdt" 
-    modify_cdt20 = "- {{ cdt('libselinux-devel')"
-    replace_cdt20 = "- {{ cdt" 
-    modify_cdt21 = "- {{ cdt('libxdamage')"
-    replace_cdt21 = "- {{ cdt" 
-    modify_cdt22 = "- {{ cdt('libxfixes')"
-    replace_cdt22 = "- {{ cdt" 
-    modify_cdt23 = "- {{ cdt('libxxf86vm')"
-    replace_cdt23 = "- {{ cdt"
-    modify_cdt24 = "- {{ cdt('libselinux')"
-    replace_cdt24 = "- {{ cdt"
-    modify_cdt25 = "- {{ cdt('libxfixes-devel')"
-    replace_cdt25 = "- {{ cdt"
-    modify_cdt26 = "- {{ cdt('libxcb')"
-    replace_cdt26 = "- {{ cdt"
-    modify_cdt27 = "- {{ cdt('libxdamage-devel')"
-    replace_cdt27 = "- {{ cdt"
-    modify_cdt28 = "- {{ cdt('libxau')"
-    replace_cdt28 = "- {{ cdt"
-    modify_cdt29 = "- {{ "
-    replace_cdt29 = "- {{ cdt"
-    modify_cdt30 = "- {{ "
-    replace_cdt30 = "- {{ cdt"
-    
-    
-    modify_min_pin = ", min_pin='x'"
-    replace_min_pin = ""
-    modify_min_pin2 = ', min_pin="x"'
-    replace_min_pin2 = ""   
-    modify_min_pin3 = ", min_pin='x.x'"
-    replace_min_pin3 = ""   
-    modify_min_pin4 = ', min_pin="x.x"'
-    replace_min_pin4 = ""   
-    modify_min_pin5 = ", min_pin='x.x.x'"
-    replace_min_pin5 = ""   
-    modify_min_pin6 = ', min_pin="x.x.x"'
-    replace_min_pin6 = ""   
-     
-    modify_max_pin = ", max_pin=None"
-    replace_max_pin = ""
-    modify_max_pin2 = ", max_pin='x'"
-    replace_max_pin2 = ""
-    modify_max_pin3 = ', max_pin="x"'
-    replace_max_pin3 = ""
-    modify_max_pin4 = ", max_pin='x.x'"
-    replace_max_pin4 = ""
-    modify_max_pin5 = ', max_pin="x.x"'
-    replace_max_pin5 = ""
-    modify_max_pin6 = ', max_pin="x.x.x"'
-    replace_max_pin6 = ""
-    modify_max_pin7 = ", max_pin='x.x.x'"
-    replace_max_pin7 = ""
-    modify_max_pin8 = ', max_pin="x.x.x.x"'
-    replace_max_pin8 = ""
-    
-    modify_exact = ", exact=True"
-    replace_exact = ""
-        
-    modify_target_platform = " ~ ctng_target_platform"
-    replace_target_platform = ""  
-
-    modify_pin = "- {{ pin_subpackage('vc')"
-    replace_pin = "- {{ pin"
-    modify_pin2 = "- {{ pin_subpackage('vs' + runtime_year + '_runtime') "
-    replace_pin2 = "- {{ pin"
-    modify_pin3 = "- {{ pin_subpackage('vs')"
-    replace_pin3 = "- {{ pin"
-    modify_pin4 = "- {{ pin_subpackage('libpcap')"
-    replace_pin4 = "- {{ pin"    
-    modify_pin5 = "- {{ pin_subpackage('metis')"
-    replace_pin5 = "- {{ pin"    
-    modify_pin6 = "- {{ pin_subpackage('poppler')"
-    replace_pin6 = "- {{ pin"
-    modify_pin7 = "- {{ pin_subpackage('gl2ps')"
-    replace_pin7 = "- {{ pin"  
-    modify_pin8 = "- {{ pin_subpackage('at-spi2-core')"
-    replace_pin8 = "- {{ pin"  
-    modify_pin9 = "- {{ pin_subpackage('libevent')"
-    replace_pin9 = "- {{ pin"  
-    modify_pin10 = "- {{ pin_subpackage('h2o')"
-    replace_pin10 = "- {{ pin"  
-    modify_pin11 = "- {{ pin_compatible('numpy')"
-    replace_pin11 = "- {{ pin"  
-    modify_pin12 = "- {{ pin_subpackage('libuv')"
-    replace_pin12 = "- {{ pin"
-    modify_pin13 = '- {{ pin_subpackage("binutils_")'
-    replace_pin13 = "- {{ pin"  
-    modify_pin14 = '- {{ pin_subpackage("gcc-osize_")'
-    replace_pin14 = "- {{ pin"  
-    modify_pin15 = '- {{ pin_compatible("libgfortran-ng")'
-    replace_pin15 = "- {{ pin"  
-    modify_pin16 = "- {{ pin_subpackage('ffmpeg')"
-    replace_pin16 = "- {{ pin"  
-    modify_pin17 = "- {{ pin_subpackage('geoviews-core')"
-    replace_pin17 = "- {{ pin"  
-    modify_pin18 = "- {{ pin_subpackage('py-lief')"
-    replace_pin18 = "- {{ pin"  
-    modify_pin19 = "- {{ pin_subpackage('liblief')"
-    replace_pin19 = "- {{ pin"  
-    modify_pin20 = "- {{ pin_subpackage('freetype')"
-    replace_pin20 = "- {{ pin"  
-    modify_pin21 = "- {{ pin_subpackage('pango')"
-    replace_pin21 = "- {{ pin"  
-    modify_pin22 = "- {{ pin_subpackage('covid-sim-data')"
-    replace_pin22 = "- {{ pin"  
-    modify_pin23 = "- {{ pin_subpackage('libarchive')"
-    replace_pin23 = "- {{ pin"
-    modify_pin24 = "- {{ pin_subpackage('freetds')"
-    replace_pin24 = "- {{ pin"
-    modify_pin25 = "- {{ pin_subpackage('scotch')"
-    replace_pin25 = "- {{ pin"
-    modify_pin26 = "- {{ pin_subpackage('ptscotch')"
-    replace_pin26 = "- {{ pin"
-    modify_pin27 = '- {{ pin_compatible("numpy")'
-    replace_pin27 = "- {{ pin"
-    modify_pin28 = "- {{ pin_subpackage('libspatialite')"
-    replace_pin28 = "- {{ pin"
-    modify_pin29 = "- {{ pin_compatible('mkl-dnn')"
-    replace_pin29 = "- {{ pin"
-    modify_pin30 = "- {{ pin_compatible('intel-openmp')"
-    replace_pin30 = "- {{ pin"
-    modify_pin31 = "- {{ pin_subpackage('libmxnet')"
-    replace_pin31 = "- {{ pin"
-    modify_pin32 = "- {{ pin_subpackage('py-mxnet')"
-    replace_pin32 = "- {{ pin"
-    modify_pin33 = "- {{ pin_compatible('curl')"
-    replace_pin33 = "- {{ pin"
-    modify_pin34 = "- {{ pin_subpackage('numpy-base')"
-    replace_pin34 = "- {{ pin"
-    modify_pin35 = "- {{ pin_subpackage('libmagic')"
-    replace_pin35 = "- {{ pin"
-    modify_pin36 = '- {{ pin_subpackage("libgomp")'
-    replace_pin36 = "- {{ pin"
-    modify_pin37 = '- {{ pin_subpackage("libstdcxx-ng")'
-    replace_pin37 = "- {{ pin"
-    modify_pin38 = '- {{ pin_subpackage("libgfortran" ~ libgfortran_soname)'
-    replace_pin38 = "- {{ pin"
-    modify_pin39 = '- {{ pin_subpackage("libgfortran")'
-    replace_pin39 = "- {{ pin"
-    modify_pin40 = '- {{ pin_subpackage("binutils_impl_")'
-    replace_pin40 = "- {{ pin"
-    modify_pin41 = '- {{ pin_subpackage("libgcc-devel_")'
-    replace_pin41 = "- {{ pin"
-    modify_pin42 = '- {{ pin_subpackage("libgcc-ng")'
-    replace_pin42 = "- {{ pin"
-    modify_pin43 = '- {{ pin_subpackage("gcc_impl_")'
-    replace_pin43 = "- {{ pin"
-    modify_pin44 = '- {{ pin_subpackage("libstdcxx-devel_")'
-    replace_pin44 = "- {{ pin"
-    modify_pin45 = "- {{ pin_subpackage('_openmp_mutex')"
-    replace_pin45 = "- {{ pin"
-    modify_pin46 = '- {{ pin_subpackage("_openmp_mutex")'
-    replace_pin46 = "- {{ pin"
-    modify_pin47 = "- {{ pin_subpackage('libgomp')"
-    replace_pin47 = "- {{ pin"
-    modify_pin48 = "- {{ pin_subpackage('g2clib')"
-    replace_pin48 = "- {{ pin"
-    modify_pin49 = "- {{ pin_subpackage('libcurl')"
-    replace_pin49 = "- {{ pin"
-    modify_pin50 = "- {{ pin_compatible('cudatoolkit')"
-    replace_pin50 = "- {{ pin"
-    modify_pin51 = "- {{ pin_subpackage('libsodium')"
-    replace_pin51 = "- {{ pin"
-    modify_pin52 = "- {{ pin_subpackage('libtiff')"
-    replace_pin52 = "- {{ pin"       
-    modify_pin53 = '- {{ pin_subpackage("libdb")'
-    replace_pin53 = "- {{ pin"
-    modify_pin54 = "- {{ pin_subpackage('libdb')"
-    replace_pin54 = "- {{ pin"
-    modify_pin55 = '- {{ pin_subpackage(name)'
-    replace_pin55 = "- {{ pin"
-    modify_pin56 = '- {{ pin_subpackage("msvc-headers-libs")'
-    replace_pin56 = "- {{ pin"
-    modify_pin57 = '- {{ pin_subpackage("winsdk")'
-    replace_pin57 = "- {{ pin"
-    modify_pin58 = '- {{ pin_subpackage("libgit2")'
-    replace_pin58 = "- {{ pin"
-    modify_pin59 = "- {{ pin_subpackage('intel-cmplr-lic-rt')"
-    replace_pin59 = "- {{ pin"
-    modify_pin60 = "- {{ pin_subpackage('intel-cmplr-lib-rt')"
-    replace_pin60 = "- {{ pin"
-    modify_pin61 = "- {{ pin_subpackage('intel-opencl-rt')"
-    replace_pin61 = "- {{ pin"
-    modify_pin62 = "- {{ pin_subpackage('dpcpp-cpp-rt')"
-    replace_pin62 = "- {{ pin"
-    modify_pin63 = '- {{ pin_subpackage("dpcpp-cpp-rt")'
-    replace_pin63 = "- {{ pin"
-    modify_pin64 = "- {{ pin_subpackage('dpcpp_impl_linux-64')"
-    replace_pin64 = "- {{ pin"
-    modify_pin65 = "- {{ pin_subpackage('dpcpp_impl_win-64')"
-    replace_pin65 = "- {{ pin"
-    modify_pin66 = "- {{ pin_subpackage('mpich')"
-    replace_pin66 = "- {{ pin"
-    modify_pin67 = "- {{ pin_subpackage('importlib-metadata')"
-    replace_pin67 = "- {{ pin"
-    modify_pin68 = "- {{ pin_subpackage('libedit')"
-    replace_pin68 = "- {{ pin"
-    modify_pin69 = "- {{ pin_subpackage('geos')"
-    replace_pin69 = "- {{ pin"
-    modify_pin70 = "- {{ pin_subpackage('at-spi2-atk')"
-    replace_pin70 = "- {{ pin"
-    modify_pin71 = "- {{ pin_compatible('dbus')"
-    replace_pin71 = "- {{ pin"
-    modify_pin72 = '- {{ pin_subpackage("aws-c-common")'
-    replace_pin72 = "- {{ pin"
-    modify_pin73 = "- {{ pin_subpackage('hdf5')"
-    replace_pin73 = "- {{ pin"
-    modify_pin74 = "- {{ pin_subpackage('libgdal')"
-    replace_pin74 = "- {{ pin"
-    modify_pin75 = "- {{ pin_subpackage('kealib')"
-    replace_pin75 = "- {{ pin"
-    modify_pin76 = "- {{ pin_subpackage('libiconv')"
-    replace_pin76 = "- {{ pin"
-    modify_pin77 = '- {{ pin_subpackage("aws-sdk-cpp")'
-    replace_pin77 = "- {{ pin"
-    modify_pin78 = "- {{ pin_subpackage('libpq')"
-    replace_pin78 = "- {{ pin"    
-    modify_pin79 = "- {{ pin_subpackage('jpeg')"
-    replace_pin79 = "- {{ pin"
-    modify_pin80 = '- {{ pin_subpackage("aws-c-event-stream")'
-    replace_pin80 = "- {{ pin"
-    modify_pin81 = "- {{ pin_subpackage('tk')"
-    replace_pin81 = "- {{ pin"
-    modify_pin82 = "- {{ pin_subpackage('libnetcdf')"
-    replace_pin82 = "- {{ pin"
-    modify_pin83 = '- {{ pin_subpackage("mpc")'
-    replace_pin83 = "- {{ pin"
-    modify_pin84 = "- {{ pin_subpackage('libssh2')"
-    replace_pin84 = "- {{ pin"
-    modify_pin85 = "- {{ pin_subpackage('prompt-toolkit')"
-    replace_pin85 = "- {{ pin"
-    modify_pin86 = "- {{ pin_subpackage('harfbuzz')"
-    replace_pin86 = "- {{ pin"
-    modify_pin87 = '- {{ '
-    replace_pin87 = "- {{ pin"
-    modify_pin88 = '- {{ '
-    replace_pin88 = "- {{ pin"
-    modify_pin89 = '- {{ '
-    replace_pin89 = "- {{ pin"
-    modify_pin90 = '- {{ '
-    replace_pin90 = "- {{ pin"
-
-    
-
-    modify_os = "os.environ.get('PY_INTERP_DEBUG', '')"
-    replace_os = "os"
-
-    modify_comment = "# string: py{{ ''.join(python.split('.')[0:2]) }}h{{ PKG_HASH }}_{{ PKG_BUILDNUM }}{{ debug }}"
-    replace_comment = ""
 
     #replace template conditionals if elif else endif if they are commented out
     modify_conditional = "# {% if false %}"
     replace_conditional = ""
+    modify_url = "https://www.googleapis.com/"
+    replace_url = "# https://www.googleapis.com/"
+
+    # match for compilers cdt and pin_subpackage
+    pattern1 = r"\('.{1,}'\)|\(\".{1,}\"\)|\([a-zA-Z]{1,}\)|\(\".{1,}\".~.{1,}\)"
+
+    # match for runtime
+    pattern2 = r'.~.\'.runtime\'|.~.runtime.[a-zA-Z]{1,}|.\+.runtime_[a-zA-Z]{1,}|.\+.\'_runtime\''
+
+    # match for min_pin 
+    pattern3 = r",.min.pin='.{1,}'|,.min.pin=\".{1,}\"|,.min.pin=[a-zA-Z]{1,}"
+
+    # match for max_pin
+    pattern4 = r",.max.pin='.{1,}'|,.max.pin=\".{1,}\"|,.max.pin=[a-zA-Z]{1,}"
+
+    # modify exact
+    pattern5 = r",.exact=[a-zA-Z]{1,}"
+
+    # modify major version
+    pattern6 = r".\+.major_ver"
+
+    # modify target platform
+    pattern7 = r".~.[a-zA-Z]{1,}_target_platform"
+
+    # modify os.environ.get
+    pattern8 = r".environ.get.{1,}'\d{1,}.{1,}'|.environ.get\('.{1,}',.{1,}'\)|.environ.get"
+
 
     # set the location of the temporary files
     child_dir = "Temp"
@@ -746,450 +446,44 @@ def modify_temporary_file(recipe_name):
     
     # if the temporary file exists then update it
     if(temp_file_status is True):
-        print("Temporary file: {0}\nModify_compiler: {1}\nReplace_compiler: {2}".format(temp_file,modify_compiler,replace_compiler))
+        #print("Temporary file: {0}\nModify_compiler: {1}\nReplace_compiler: {2}".format(temp_file,modify_compiler,replace_compiler))
             # replace the lines in the meta.yaml that are used for the jinja2 template
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_compiler, replace_compiler))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_compiler2, replace_compiler2))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_compiler3, replace_compiler3))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_compiler4, replace_compiler4))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_compiler5, replace_compiler5))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_compiler6, replace_compiler6))
-
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_runtime, replace_runtime))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_runtime2, replace_runtime2))
-
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_cdt, replace_cdt))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_cdt2, replace_cdt2))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_cdt3, replace_cdt3))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_cdt4, replace_cdt4))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_cdt5, replace_cdt5))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_cdt6, replace_cdt6))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_cdt7, replace_cdt7))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_cdt8, replace_cdt8))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_cdt9, replace_cdt9))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_cdt10, replace_cdt10))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_cdt11, replace_cdt11))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_cdt12, replace_cdt12))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_cdt13, replace_cdt13))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_cdt14, replace_cdt14))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_cdt15, replace_cdt15))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_cdt16, replace_cdt16))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_cdt17, replace_cdt17))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_cdt18, replace_cdt18))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_cdt19, replace_cdt19))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_cdt20, replace_cdt20))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_cdt21, replace_cdt21))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_cdt22, replace_cdt22))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_cdt23, replace_cdt23))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_cdt24, replace_cdt24))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_cdt25, replace_cdt25))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_cdt26, replace_cdt26))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_cdt27, replace_cdt27))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_cdt28, replace_cdt28))
-
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_min_pin, replace_min_pin))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_min_pin2, replace_min_pin2))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_min_pin3, replace_min_pin3))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_min_pin4, replace_min_pin4))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_min_pin5, replace_min_pin5))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_min_pin6, replace_min_pin6))
-
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_max_pin, replace_max_pin))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_max_pin2, replace_max_pin2))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_max_pin3, replace_max_pin3))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_max_pin4, replace_max_pin4))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_max_pin5, replace_max_pin5))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_max_pin6, replace_max_pin6))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_max_pin7, replace_max_pin7))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_max_pin8, replace_max_pin8))
-
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_exact, replace_exact))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_target_platform, replace_target_platform))
-
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin, replace_pin))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin2, replace_pin2))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin3, replace_pin3))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin4, replace_pin4))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin5, replace_pin5))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin6, replace_pin6))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin7, replace_pin7))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin8, replace_pin8))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin9, replace_pin9))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin10, replace_pin10))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin11, replace_pin11))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin12, replace_pin12))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin13, replace_pin13))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin14, replace_pin14))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin15, replace_pin15))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin16, replace_pin16))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin17, replace_pin17))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin18, replace_pin18))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin19, replace_pin19))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin20, replace_pin20))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin21, replace_pin21))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin22, replace_pin22))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin23, replace_pin23))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin24, replace_pin24))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin25, replace_pin25))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin26, replace_pin26))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin27, replace_pin27))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin28, replace_pin28))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin29, replace_pin29))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin30, replace_pin30))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin31, replace_pin31))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin32, replace_pin32))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin33, replace_pin33))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin34, replace_pin34))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin35, replace_pin35))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin36, replace_pin36))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin37, replace_pin37))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin38, replace_pin38))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin39, replace_pin39))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin40, replace_pin40))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin41, replace_pin41))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin42, replace_pin42))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin43, replace_pin43))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin44, replace_pin44))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin45, replace_pin45))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin46, replace_pin46))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin47, replace_pin47))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin48, replace_pin48))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin49, replace_pin49))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin50, replace_pin50))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin51, replace_pin51))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin52, replace_pin52))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin53, replace_pin53))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin54, replace_pin54))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin55, replace_pin55))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin56, replace_pin56))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin57, replace_pin57))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin58, replace_pin58))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin59, replace_pin59))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin60, replace_pin60))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin61, replace_pin61))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin62, replace_pin62))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin63, replace_pin63))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin64, replace_pin64))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin65, replace_pin65))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin66, replace_pin66))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin67, replace_pin67))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin68, replace_pin68))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin69, replace_pin69))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin70, replace_pin70))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin71, replace_pin71))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin72, replace_pin72))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin73, replace_pin73))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin74, replace_pin74))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin75, replace_pin75))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin76, replace_pin76))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin77, replace_pin77))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin78, replace_pin78))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin79, replace_pin79))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin80, replace_pin80))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin81, replace_pin81))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin82, replace_pin82))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin83, replace_pin83))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin84, replace_pin84))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin85, replace_pin85))
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_pin86, replace_pin86))
-
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_os, replace_os))
-
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_comment, replace_comment))
+  
 
         # replace template conditionals if they are commented out
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
+#        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
             # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_conditional, replace_conditional))
+#            sys.stdout.write(line.replace(modify_conditional, replace_conditional))
 
+            #print("Temporary File:")
+            #print(temp_file)
+        
+        # replace the text for compilers cdt and pin_subpackages
+        with open (temp_file, 'r') as f:
+            content = f.read()
+            # modify url
+            content_url = re.sub(modify_url, replace_url, content)
+            # replace the max_pin
+            content_max_pin = re.sub(pattern4, '', content_url)
+            # replace the runtime
+            content_runtime = re.sub(pattern2, '', content_max_pin)
+            # replace the exact
+            content_exact = re.sub(pattern5, '', content_runtime)
+            # replace the environment
+            content_environment = re.sub(pattern8, '', content_exact)
+            # replace the compilers cdt and pins 
+            content_clean_compilers = re.sub(pattern1, '', content_environment)
+
+            content_new = content_clean_compilers
+
+        # write to a new file and replace #compilers cdt and pins
+        with open(temp_file,'w') as f:
+                #write to the file
+                f.writelines(content_new)
 
         # render the temporary file
         render_meta_file(recipe_name)
 
-        #replace_template(temp_file, line_to_modify, line_to_replace)
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(line_to_modify, line_to_replace))
         #replace_template(temp_file, modify_script2, replace_script2)
 #        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
             # replace the jinja2 template sections
@@ -1200,51 +494,12 @@ def modify_temporary_file(recipe_name):
 #            sys.stdout.write(line.replace(modify_script,replace_script))
 
         # replace the name section
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_name,replace_name))
-
-        # replace the name section
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_version,replace_version))
         
         # replace tabs by spaces
         for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
             # replace the jinja2 template sections
             sys.stdout.write(line.replace('\t','    '))
-        
-        # replace tabs by spaces
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_template,replace_template))
-
-        # replace empty urls
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_url,replace_url))
-
-        # replace fn template
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_fn,replace_fn))
-        
-        # replace fn template
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_sha256,replace_sha256))
-        
-        # replace fn template
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_template2,replace_template2))
-
-
-        # replace fn template
-        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
-            # replace the jinja2 template sections
-            sys.stdout.write(line.replace(modify_number,replace_number))
-
+  
         # replace fn template
 #        for i, line in enumerate(fileinput.input(temp_file, inplace=1)):
             # replace the jinja2 template sections
@@ -1537,10 +792,15 @@ def generate_reports(dir_list):
     #find_meta_info(dir_list)
 
     # ----------------- Gather Test Information ------------------
-    
+    recipe_count = 0
+
     #loop to gather the test information
     for recipe in dir_list:
         recipe_result = find_meta_info(recipe)
+        # display data information
+        recipe_count = recipe_count + 1
+        print("Aggregate Size {0}".format(aggregate_size))
+        print("Recipe Count {0}".format(recipe_count))
         # verify if there is information for the meta file
         if(recipe_result is not None):
             test_data, import_test, commands_test = find_test_data(recipe_result)
